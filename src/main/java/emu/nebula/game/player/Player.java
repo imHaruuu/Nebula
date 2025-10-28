@@ -19,6 +19,8 @@ import emu.nebula.game.mail.Mailbox;
 import emu.nebula.game.story.StoryManager;
 import emu.nebula.game.tower.StarTowerManager;
 import emu.nebula.net.GameSession;
+import emu.nebula.proto.PlayerData.DictionaryEntry;
+import emu.nebula.proto.PlayerData.DictionaryTab;
 import emu.nebula.proto.PlayerData.PlayerInfo;
 import emu.nebula.proto.Public.NewbieInfo;
 import emu.nebula.proto.Public.QuestType;
@@ -333,7 +335,6 @@ public class Player implements GameDatabaseObject {
             .setCreateTime(this.getCreateTime());
         
         proto.getMutableWorldClass()
-            .setStage(3)
             .setCur(this.getLevel())
             .setLastExp(this.getExp());
         
@@ -417,6 +418,22 @@ public class Player implements GameDatabaseObject {
         // Add board ids
         for (int boardId : this.getBoards()) {
             proto.addBoard(boardId);
+        }
+        
+        // Add dictionary tabs
+        for (var dictionaryData : GameData.getDictionaryTabDataTable()) {
+            var dictionaryProto = DictionaryTab.newInstance()
+                    .setTabId(dictionaryData.getId());
+            
+            for (var entry : dictionaryData.getEntries()) {
+                var entryProto = DictionaryEntry.newInstance()
+                        .setIndex(entry.getIndex())
+                        .setStatus(2); // 2 = complete
+                
+                dictionaryProto.addEntries(entryProto);
+            }
+            
+            proto.addDictionaries(dictionaryProto);
         }
 
         // Server timestamp
