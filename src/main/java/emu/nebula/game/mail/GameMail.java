@@ -48,7 +48,7 @@ public class GameMail {
     }
 
     public boolean canRemove() {
-        return (this.isRead() || this.isRecv()) && !this.isPin() && (this.hasAttachments() && this.isRecv());
+        return (this.isRead() || (this.hasAttachments() && this.isRecv())) && !this.isPin();
     }
 
     public boolean hasAttachments() {
