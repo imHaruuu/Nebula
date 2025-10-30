@@ -44,7 +44,7 @@ public class HandlerIkeReq extends NetHandler {
         // Create response
         var rsp = IKEResp.newInstance()
                 .setToken(session.getToken())
-                .setCipher(1) // 0 = gcm, 1 = chacha20
+                .setCipher(session.getEncryptMethod())
                 .setServerTs(Nebula.getCurrentTime())
                 .setPubKey(session.getServerPublicKey());
         

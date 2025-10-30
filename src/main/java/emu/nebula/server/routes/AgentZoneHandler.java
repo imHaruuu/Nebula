@@ -38,6 +38,7 @@ public class AgentZoneHandler implements Handler {
         
         byte[] sessionKey = AeadHelper.serverGarbleKey;
         boolean hasKey3 = false;
+        int encryptMethod = 0;
         
         // Get token
         String token = ctx.header("X-Token");
@@ -59,6 +60,7 @@ public class AgentZoneHandler implements Handler {
             
             // Set key
             sessionKey = session.getKey();
+            encryptMethod = session.getEncryptMethod();
             hasKey3 = true;
         }
         
@@ -80,7 +82,7 @@ public class AgentZoneHandler implements Handler {
             
             // Decrypt message
             if (hasKey3) {
-                message = AeadHelper.decryptChaCha(message, sessionKey);
+                message = AeadHelper.decrypt(message, sessionKey, encryptMethod);
                 offset = 10;
             } else {
                 message = AeadHelper.decryptBasic(message, sessionKey);
@@ -150,7 +152,7 @@ public class AgentZoneHandler implements Handler {
             
             // Encrypt
             if (hasKey3) {
-                result = AeadHelper.encryptChaCha(result, sessionKey);
+                result = AeadHelper.encrypt(result, sessionKey, encryptMethod);
             } else {
                 result = AeadHelper.encryptGCM(result, sessionKey);
                 result = AeadHelper.encryptBasic(result, sessionKey);

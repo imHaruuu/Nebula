@@ -12,6 +12,7 @@ import emu.nebula.game.account.Account;
 import emu.nebula.game.account.AccountHelper;
 import emu.nebula.game.player.Player;
 import emu.nebula.util.AeadHelper;
+import emu.nebula.util.Utils;
 import lombok.Getter;
 import us.hebi.quickbuf.RepeatedByte;
 
@@ -22,6 +23,7 @@ public class GameSession {
     private Player player;
     
     // Crypto
+    private int encryptMethod; // 0 = gcm, 1 = chacha20
     private byte[] clientPublicKey;
     private byte[] serverPublicKey;
     private byte[] serverPrivateKey;
@@ -75,6 +77,7 @@ public class GameSession {
     
     public void calculateKey() {
         this.key = AeadHelper.generateKey(clientPublicKey, serverPublicKey, serverPrivateKey);
+        this.encryptMethod = Utils.randomRange(0, 1);
     }
     
     public String generateToken() {

@@ -36,6 +36,24 @@ public class AeadHelper {
         return iv; 
     }
     
+    //
+
+    public static byte[] encrypt(byte[] data, byte[] sessionKey, int method) throws Exception {
+        if (method == 1) {
+            return encryptChaCha(data, sessionKey);
+        } else {
+            return encryptGCM(data, sessionKey);
+        }
+    }
+    
+    public static byte[] decrypt(byte[] data, byte[] sessionKey, int method) throws Exception {
+        if (method == 1) {
+            return decryptChaCha(data, sessionKey);
+        } else {
+            return decryptGCM(data, sessionKey);
+        }
+    }
+    
     // AES CBC
 
     public static byte[] encryptCBC(byte[] messageData) throws Exception {
