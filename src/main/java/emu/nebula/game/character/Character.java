@@ -198,12 +198,12 @@ public class Character implements GameDatabaseObject {
         // TODO check player level to make sure they can advance this character
         
         // Sanity check
-        if (index < 0 || index >= this.skills.length) {
+        if (index < 0 || index >= this.getSkills().length) {
             return null;
         }
         
         // Get advance data
-        int upgradeId = (this.getData().getSkillsUpgradeGroup(index) * 100) + (this.skills[index] + 1);
+        int upgradeId = (this.getData().getSkillsUpgradeGroup(index) * 100) + this.getSkills()[index];
         var data = GameData.getCharacterSkillUpgradeDataTable().get(upgradeId);
         
         if (data == null) {
