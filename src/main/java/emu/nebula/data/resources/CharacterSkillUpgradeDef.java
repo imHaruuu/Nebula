@@ -2,6 +2,7 @@ package emu.nebula.data.resources;
 
 import emu.nebula.GameConstants;
 import emu.nebula.data.BaseDef;
+import emu.nebula.data.GameData;
 import emu.nebula.data.ResourceType;
 import emu.nebula.game.inventory.ItemParamMap;
 
@@ -52,5 +53,10 @@ public class CharacterSkillUpgradeDef extends BaseDef {
         }
         
         this.upgradeId = (this.Group * 100) + this.AdvanceNum;
+        
+        // Fix for duplicate skill upgrade ids
+        while (GameData.getCharacterSkillUpgradeDataTable().containsKey(this.getId())) {
+            this.upgradeId += 1;
+        }
     }
 }

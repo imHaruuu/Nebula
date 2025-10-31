@@ -2,6 +2,7 @@ package emu.nebula.util;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -98,7 +99,7 @@ public class JsonUtils {
     }
 
     public static <T1, T2> Map<T1, T2> loadToMap(InputStreamReader fileReader, Class<T1> keyType, Class<T2> valueType) throws IOException {
-        return gson.fromJson(fileReader, TypeToken.getParameterized(Map.class, keyType, valueType).getType());
+        return gson.fromJson(fileReader, TypeToken.getParameterized(LinkedHashMap.class, keyType, valueType).getType());
     }
 
     public static <T1, T2> Map<T1, T2> loadToMap(String filename, Class<T1> keyType, Class<T2> valueType) throws IOException {
