@@ -6,6 +6,7 @@ import dev.morphia.annotations.Indexed;
 import emu.nebula.Nebula;
 import emu.nebula.data.GameData;
 import emu.nebula.database.GameDatabaseObject;
+import emu.nebula.game.inventory.ItemParamMap;
 import emu.nebula.proto.Public.ItemTpl;
 import emu.nebula.proto.PublicStarTower.BuildPotential;
 import emu.nebula.proto.PublicStarTower.StarTowerBuildBrief;
@@ -13,8 +14,7 @@ import emu.nebula.proto.PublicStarTower.StarTowerBuildDetail;
 import emu.nebula.proto.PublicStarTower.StarTowerBuildInfo;
 import emu.nebula.proto.PublicStarTower.TowerBuildChar;
 import emu.nebula.util.Snowflake;
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+
 import lombok.Getter;
 
 @Getter
@@ -33,9 +33,9 @@ public class StarTowerBuild implements GameDatabaseObject {
     private int[] charIds;
     private int[] discIds;
     
-    private Int2IntMap charPots;
-    private Int2IntMap potentials;
-    private Int2IntMap subNoteSkills;
+    private ItemParamMap charPots;
+    private ItemParamMap potentials;
+    private ItemParamMap subNoteSkills;
     
     @Deprecated
     public StarTowerBuild() {
@@ -46,9 +46,9 @@ public class StarTowerBuild implements GameDatabaseObject {
         this.uid = Snowflake.newUid();
         this.playerUid = game.getPlayer().getUid();
         this.name = "";
-        this.charPots = new Int2IntOpenHashMap();
-        this.potentials = new Int2IntOpenHashMap();
-        this.subNoteSkills = new Int2IntOpenHashMap();
+        this.charPots = new ItemParamMap();
+        this.potentials = new ItemParamMap();
+        this.subNoteSkills = new ItemParamMap();
         
         // Characters
         this.charIds = game.getChars().stream()
@@ -83,6 +83,9 @@ public class StarTowerBuild implements GameDatabaseObject {
         for (var entry : game.getItems()) {
             this.getSubNoteSkills().put(entry.getIntKey(), entry.getIntValue());
         }
+        
+        // Caclulate record score and cache it
+        this.score = this.calculateScore();
     }
 
     public void setName(String newName) {
@@ -102,6 +105,30 @@ public class StarTowerBuild implements GameDatabaseObject {
     public void setPreference(boolean state) {
         this.preference = state;
         Nebula.getGameDatabase().update(this, this.getUid(), "preference", this.isPreference());
+    }
+    
+    // Score
+    
+    private int calculateScore() {
+        // Init score
+        int score = 0;
+        
+        // Potentials
+        for (var potential : this.getPotentials().int2IntEntrySet()) {
+            var data = GameData.getPotentialDataTable().get(potential.getIntKey());
+            if (data == null) continue;
+            
+            int index = potential.getIntValue() - 1;
+            score += data.getBuildScore()[index];
+        }
+        
+        // Sub note skills
+        for (var item : this.getSubNoteSkills()) {
+            score += item.getIntValue() * 15;
+        }
+        
+        // Complete
+        return score;
     }
     
     // Proto

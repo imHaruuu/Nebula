@@ -247,8 +247,22 @@ public class StarTowerGame {
         // Handle changes
         switch (itemData.getItemSubType()) {
             case Potential, SpecificPotential -> {
+                // Get potential data
+                var potentialData = GameData.getPotentialDataTable().get(id);
+                if (potentialData == null) return change;
+                
+                // Clamp level
+                int curLevel = getPotentials().get(id);
+                int nextLevel = Math.min(curLevel + count, potentialData.getMaxLevel());
+                
+                // Sanity
+                count = nextLevel - curLevel;
+                if (count <= 0) {
+                    return change;
+                }
+                
                 // Add potential
-                this.getPotentials().add(id, count);
+                this.getPotentials().put(id, nextLevel);
                 
                 // Add change
                 var info = PotentialInfo.newInstance()
@@ -501,23 +515,6 @@ public class StarTowerGame {
         this.addCase(rsp, new StarTowerCase(CaseType.RecoveryHP));
         
         return rsp;
-    }
-    
-    // Score
-    
-    public int calculateScore() {
-        // Init score
-        int score = 0;
-        
-        // Potentials TODO
-        
-        // Sub note skills
-        for (var item : this.getItems()) {
-            score += item.getIntValue() * 15;
-        }
-        
-        // Complete
-        return score;
     }
     
     // Proto
