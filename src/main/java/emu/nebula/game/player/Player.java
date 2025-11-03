@@ -566,6 +566,11 @@ public class Player implements GameDatabaseObject {
         proto.addHandbook(this.getCharacters().getCharacterHandbook());
         proto.addHandbook(this.getCharacters().getDiscHandbook());
         
+        // Force unlock all monoliths
+        for (var towerData : GameData.getStarTowerDataTable()) {
+            proto.addRglPassedIds(towerData.getId());
+        }
+        
         // Extra
         proto.getMutableVampireSurvivorRecord()
             .getMutableSeason();
