@@ -17,9 +17,13 @@ import emu.nebula.database.GameDatabaseObject;
 import emu.nebula.game.inventory.ItemParamMap;
 import emu.nebula.game.player.Player;
 import emu.nebula.game.player.PlayerChangeInfo;
+import emu.nebula.net.NetMsgId;
+import emu.nebula.proto.Notify.Skin;
+import emu.nebula.proto.Notify.SkinChange;
 import emu.nebula.proto.Public.Char;
 import emu.nebula.proto.Public.CharGemPreset;
 import emu.nebula.proto.Public.CharGemSlot;
+import emu.nebula.proto.Public.UI32;
 import emu.nebula.proto.PublicStarTower.StarTowerChar;
 import emu.nebula.proto.PublicStarTower.StarTowerCharGem;
 import emu.nebula.util.Bitset;
@@ -190,6 +194,22 @@ public class Character implements GameDatabaseObject {
         
         // Add advance level
         this.advance++;
+        
+        // Check if we need to add skin
+        if (this.getAdvance() == this.getData().getAdvanceSkinUnlockLevel()) {
+            // Set advance skin
+            this.skin = this.getData().getAdvanceSkinId();
+            
+            // Send packets
+            this.getPlayer().addNextPackage(
+                NetMsgId.character_skin_gain_notify, 
+                Skin.newInstance().setNew(UI32.newInstance().setValue(this.getSkin()))
+            );
+            this.getPlayer().addNextPackage(
+                NetMsgId.character_skin_change_notify, 
+                SkinChange.newInstance().setCharId(this.getCharId()).setSkinId(this.getSkin())
+            );
+        }
         
         // Save to database
         this.save();

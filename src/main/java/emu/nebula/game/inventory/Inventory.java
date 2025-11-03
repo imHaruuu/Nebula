@@ -9,8 +9,11 @@ import emu.nebula.Nebula;
 import emu.nebula.data.GameData;
 import emu.nebula.database.GameDatabaseObject;
 import emu.nebula.game.player.PlayerManager;
+import emu.nebula.net.NetMsgId;
+import emu.nebula.proto.Notify.Skin;
 import emu.nebula.proto.Public.Item;
 import emu.nebula.proto.Public.Res;
+import emu.nebula.proto.Public.UI32;
 import emu.nebula.game.player.Player;
 import emu.nebula.game.player.PlayerChangeInfo;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -129,6 +132,12 @@ public class Inventory extends PlayerManager implements GameDatabaseObject {
         
         // Save to database
         Nebula.getGameDatabase().addToList(this, this.getUid(), "extraSkins", id);
+        
+        // Send packet
+        this.getPlayer().addNextPackage(
+            NetMsgId.character_skin_gain_notify, 
+            Skin.newInstance().setNew(UI32.newInstance().setValue(id))
+        );
     }
     
     public IntCollection getAllHeadIcons() {
