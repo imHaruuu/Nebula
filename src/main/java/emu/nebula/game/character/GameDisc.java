@@ -34,6 +34,7 @@ public class GameDisc implements GameDatabaseObject {
     private int exp;
     private int phase;
     private int star;
+    private boolean read;
     
     private long createTime;
     
@@ -149,16 +150,16 @@ public class GameDisc implements GameDatabaseObject {
         }
         
         // Create change info
-        var changes = new PlayerChangeInfo();
+        var change = new PlayerChangeInfo();
         
         // Remove items
-        this.getPlayer().getInventory().removeItems(params, changes);
+        this.getPlayer().getInventory().removeItems(params, change);
         
         // Add exp
         this.addExp(exp);
         
         // Success
-        return changes.setSuccess(true);
+        return change.setSuccess(true);
     }
     
     public PlayerChangeInfo promote() {
@@ -178,7 +179,7 @@ public class GameDisc implements GameDatabaseObject {
         }
         
         // Remove items
-        var changes = this.getPlayer().getInventory().removeItems(data.getMaterials(), null);
+        var change = this.getPlayer().getInventory().removeItems(data.getMaterials(), null);
         
         // Add phase level
         this.phase++;
@@ -187,7 +188,7 @@ public class GameDisc implements GameDatabaseObject {
         this.save();
         
         // Success
-        return changes.setSuccess(true);
+        return change.setSuccess(true);
     }
     
     public PlayerChangeInfo limitBreak(int count) {
@@ -206,7 +207,7 @@ public class GameDisc implements GameDatabaseObject {
         }
         
         // Remove items
-        var changes = this.getPlayer().getInventory().removeItems(materials, null);
+        var change = this.getPlayer().getInventory().removeItems(materials, null);
         
         // Add phase level
         this.star = Math.max(this.star + count, 4);
@@ -215,7 +216,32 @@ public class GameDisc implements GameDatabaseObject {
         this.save();
         
         // Success
-        return changes.setSuccess(true);
+        return change.setSuccess(true);
+    }
+    
+    public PlayerChangeInfo receiveReadReward() {
+        // Create change info
+        var change = new PlayerChangeInfo();
+        
+        // Sanity check
+        if (this.isRead()) {
+            return change;
+        }
+        
+        // Add reward
+        if (this.getData().getReadReward() != null) {
+            int id = getData().getReadReward()[0];
+            int count = getData().getReadReward()[1];
+            
+            this.getPlayer().getInventory().addItem(id, count, change);
+        }
+        
+        // Set read flag
+        this.read = true;
+        this.save();
+        
+        // Success
+        return change;
     }
     
     // Proto
@@ -227,6 +253,7 @@ public class GameDisc implements GameDatabaseObject {
                 .setExp(this.getExp())
                 .setPhase(this.getPhase())
                 .setStar(this.getStar())
+                .setRead(this.isRead())
                 .setCreateTime(this.getCreateTime());
         
         return proto;

@@ -11,6 +11,7 @@ public class DiscDef extends BaseDef {
     private int StrengthenGroupId;
     private int PromoteGroupId;
     private int TransformItemId;
+    private int[] ReadReward;
     
     @Override
     public int getId() {
