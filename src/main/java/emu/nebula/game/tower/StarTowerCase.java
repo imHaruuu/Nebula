@@ -1,5 +1,9 @@
 package emu.nebula.game.tower;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import emu.nebula.proto.PublicStarTower.HawkerGoods;
 import emu.nebula.proto.PublicStarTower.StarTowerRoomCase;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -22,8 +26,14 @@ public class StarTowerCase {
     private int floorId;
     private int roomType;
     
+    private int eventId;
+    private int npcId;
+    
     // Selector
     private IntList ids;
+    
+    // Hawker
+    private Map<Integer, StarTowerShopGoods> goodsList;
     
     public StarTowerCase(CaseType type) {
         this.type = type;
@@ -49,6 +59,16 @@ public class StarTowerCase {
         return this.getIds().getInt(index);
     }
     
+    public void addGoods(StarTowerShopGoods goods) {
+        if (this.goodsList == null) {
+            this.goodsList = new HashMap<>();
+        }
+        
+        this.getGoodsList().put(getGoodsList().size() + 1, goods);
+    }
+    
+    // Proto
+    
     public StarTowerRoomCase toProto() {
         var proto = StarTowerRoomCase.newInstance()
                 .setId(this.getId());
@@ -73,6 +93,30 @@ public class StarTowerCase {
             }
             case PotentialSelect -> {
                 proto.getMutableSelectPotentialCase();
+            }
+            case NpcEvent -> {
+                proto.getMutableSelectOptionsEventCase()
+                    .setEvtId(this.getEventId())
+                    .setNPCId(this.getNpcId())
+                    .addAllOptions(this.getIds().toIntArray());
+            }
+            case Hawker -> {
+                var hawker = proto.getMutableHawkerCase();
+                
+                for (var entry : getGoodsList().entrySet()) {
+                    var id = entry.getKey();
+                    var goods = entry.getValue();
+                    
+                    var info = HawkerGoods.newInstance()
+                            .setIdx(goods.getGoodsId())
+                            .setSid(id)
+                            .setType(goods.getType())
+                            .setGoodsId(102) // ?
+                            .setPrice(goods.getPrice())
+                            .setTag(1);
+                    
+                    hawker.addList(info);
+                }
             }
             default -> {
                 

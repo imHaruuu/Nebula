@@ -24,6 +24,7 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 
 import lombok.Getter;
 import lombok.SneakyThrows;
+import us.hebi.quickbuf.RepeatedMessage;
 
 @Getter
 @Entity(useDiscriminator = false)
@@ -58,8 +59,9 @@ public class StarTowerGame {
     
     // Case
     private int lastCaseId = 0;
-    private int selectorCaseIndex = -1;
     private int battleCaseIndex = -1;
+    private int selectorCaseIndex = -1;
+    private int hawkerCaseIndex = -1;
     private List<StarTowerCase> cases;
     
     // Bag
@@ -202,11 +204,19 @@ public class StarTowerGame {
         return this.getCases().get(this.getSelectorCaseIndex());
     }
     
+    public StarTowerCase getHawkerCase() {
+        if (this.getHawkerCaseIndex() < 0 || this.getHawkerCaseIndex() >= this.getCases().size()) {
+            return null;
+        }
+        
+        return this.getCases().get(this.getHawkerCaseIndex());
+    }
+    
     public StarTowerCase addCase(StarTowerCase towerCase) {
         return this.addCase(null, towerCase);
     }
     
-    public StarTowerCase addCase(StarTowerInteractResp rsp, StarTowerCase towerCase) {
+    public StarTowerCase addCase(RepeatedMessage<StarTowerRoomCase> cases, StarTowerCase towerCase) {
         // Add to cases list
         this.getCases().add(towerCase);
         
@@ -214,8 +224,8 @@ public class StarTowerGame {
         towerCase.setId(++this.lastCaseId);
         
         // Set proto
-        if (rsp != null) {
-            rsp.getMutableCases().add(towerCase.toProto());
+        if (cases != null) {
+            cases.add(towerCase.toProto());
         }
         
         //
@@ -223,6 +233,8 @@ public class StarTowerGame {
             this.selectorCaseIndex = this.getCases().size() - 1;
         } else if (towerCase.getType() == CaseType.Battle) {
             this.battleCaseIndex = this.getCases().size() - 1;
+        } else if (towerCase.getType() == CaseType.Hawker) {
+            this.hawkerCaseIndex = this.getCases().size() - 1;
         }
         
         return towerCase;
@@ -351,6 +363,8 @@ public class StarTowerGame {
             rsp = this.onSelect(req, rsp);
         } else if (req.hasEnterReq()) {
             rsp = this.onEnterReq(req, rsp);
+        } else if (req.hasHawkerReq()) {
+            rsp = this.onHawkerReq(req, rsp);
         }
         
         // Add any items
@@ -377,7 +391,7 @@ public class StarTowerGame {
     }
     
     // Interact events
-    
+
     @SneakyThrows
     public StarTowerInteractResp onBattleEnd(StarTowerInteractReq req, StarTowerInteractResp rsp) {
         var proto = req.getBattleEndReq();
@@ -400,7 +414,7 @@ public class StarTowerGame {
             var potentialCase = this.createPotentialSelector(charId);
             
             // Add case
-            this.addCase(rsp, potentialCase);
+            this.addCase(rsp.getMutableCases(), potentialCase);
             
             // Add sub note skills
             var battleCase = this.getBattleCase();
@@ -481,8 +495,9 @@ public class StarTowerGame {
         }
         
         // Clear cases
-        this.selectorCaseIndex = -1;
         this.battleCaseIndex = -1;
+        this.selectorCaseIndex = -1;
+        this.hawkerCaseIndex = -1;
         this.lastCaseId = 0;
         this.cases.clear();
         
@@ -506,25 +521,35 @@ public class StarTowerGame {
             var battleCase = new StarTowerCase(CaseType.Battle);
             battleCase.setSubNoteSkillNum(Utils.randomRange(1, 3));
             
-            this.addCase(battleCase);
-            room.addCases(battleCase.toProto());
+            this.addCase(room.getMutableCases(), battleCase);
+        } else if (this.roomType == StarTowerRoomType.EventRoom.getValue()) {
+            
+        } else if (this.roomType == StarTowerRoomType.ShopRoom.getValue()) {
+            var hawkerCase = new StarTowerCase(CaseType.Hawker);
+            
+            hawkerCase.addGoods(new StarTowerShopGoods(1, 1, 200));
+            hawkerCase.addGoods(new StarTowerShopGoods(1, 1, 200));
+            hawkerCase.addGoods(new StarTowerShopGoods(1, 1, 200));
+            
+            this.addCase(room.getMutableCases(), hawkerCase);
         }
         
         // Add cases
-        this.addCase(syncHpCase);
-        this.addCase(doorCase);
+        this.addCase(room.getMutableCases(), syncHpCase);
+        this.addCase(room.getMutableCases(), doorCase);
         
-        // Add cases to room
-        room.addCases(syncHpCase.toProto());
-        room.addCases(doorCase.toProto());
-        
+        // Done
         return rsp;
     }
 
     public StarTowerInteractResp onRecoveryHP(StarTowerInteractReq req, StarTowerInteractResp rsp) {
         // Add case
-        this.addCase(rsp, new StarTowerCase(CaseType.RecoveryHP));
+        this.addCase(rsp.getMutableCases(), new StarTowerCase(CaseType.RecoveryHP));
         
+        return rsp;
+    }
+    
+    private StarTowerInteractResp onHawkerReq(StarTowerInteractReq req, StarTowerInteractResp rsp) {
         return rsp;
     }
     
