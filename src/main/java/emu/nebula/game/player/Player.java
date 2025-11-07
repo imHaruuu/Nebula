@@ -17,6 +17,7 @@ import emu.nebula.game.gacha.GachaManager;
 import emu.nebula.game.instance.InstanceManager;
 import emu.nebula.game.inventory.Inventory;
 import emu.nebula.game.mail.Mailbox;
+import emu.nebula.game.quest.QuestManager;
 import emu.nebula.game.story.StoryManager;
 import emu.nebula.game.tower.StarTowerManager;
 import emu.nebula.net.GameSession;
@@ -72,6 +73,7 @@ public class Player implements GameDatabaseObject {
     private transient StarTowerManager starTowerManager;
     private transient InstanceManager instanceManager;
     private transient StoryManager storyManager;
+    private transient QuestManager questManager;
     
     // Next packages
     private transient Stack<NetMsgPacket> nextPackages;
@@ -143,6 +145,10 @@ public class Player implements GameDatabaseObject {
     public void removeSession() {
         this.session = null;
         Nebula.getGameContext().getPlayerModule().removeFromCache(this);
+    }
+    
+    public boolean hasSession() {
+        return this.session != null;
     }
     
     public boolean getGender() {
@@ -412,6 +418,9 @@ public class Player implements GameDatabaseObject {
         return manager;
     }
     
+    /**
+     * Called when the player is loaded from the database
+     */
     public void onLoad() {
         // Load from database
         this.getCharacters().loadFromDatabase();
@@ -428,6 +437,7 @@ public class Player implements GameDatabaseObject {
         this.starTowerManager = this.loadManagerFromDatabase(StarTowerManager.class);
         this.instanceManager = this.loadManagerFromDatabase(InstanceManager.class);
         this.storyManager = this.loadManagerFromDatabase(StoryManager.class);
+        this.questManager = this.loadManagerFromDatabase(QuestManager.class);
     }
     
     // Next packages
@@ -535,6 +545,12 @@ public class Player implements GameDatabaseObject {
             proto.addBoard(boardId);
         }
         
+        // Quests
+        var quests = proto.getMutableQuests();
+        for (var quest : this.getQuestManager().getQuests().values()) {
+            quests.addList(quest.toProto());
+        }
+        
         // Add dictionary tabs
         for (var dictionaryData : GameData.getDictionaryTabDataTable()) {
             var dictionaryProto = DictionaryTab.newInstance()
@@ -567,7 +583,6 @@ public class Player implements GameDatabaseObject {
         proto.getMutableVampireSurvivorRecord()
             .getMutableSeason();
         
-        proto.getMutableQuests();
         proto.getMutableAgent();
         proto.getMutablePhone();
         
@@ -585,4 +600,5 @@ public class Player implements GameDatabaseObject {
         
         return proto;
     }
+
 }
