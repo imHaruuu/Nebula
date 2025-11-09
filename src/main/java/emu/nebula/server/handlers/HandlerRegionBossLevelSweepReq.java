@@ -6,7 +6,11 @@ import emu.nebula.proto.RegionBossLevelSweep.RegionBossLevelSweepReq;
 import emu.nebula.proto.RegionBossLevelSweep.RegionBossLevelSweepResp;
 import emu.nebula.proto.RegionBossLevelSweep.RegionBossLevelSweepRewards;
 import emu.nebula.net.HandlerId;
+
+import java.util.List;
+
 import emu.nebula.data.GameData;
+import emu.nebula.game.inventory.ItemParamMap;
 import emu.nebula.game.quest.QuestCondType;
 import emu.nebula.net.GameSession;
 
@@ -42,17 +46,19 @@ public class HandlerRegionBossLevelSweepReq extends NetHandler {
         var rsp = RegionBossLevelSweepResp.newInstance()
                 .setChange(change.toProto());
         
-        // Cache reward list
-        var rewardList = data.getRewards().toItemTemplateStream().toList();
-        
-        // Add rewards
-        for (int i = 0; i < req.getTimes(); i++) {
-            var reward = RegionBossLevelSweepRewards.newInstance()
-                    .setExp(data.getEnergyConsume());
+        // Add reward list to response
+        if (change.getExtraData() != null) {
+            @SuppressWarnings("unchecked")
+            var list = (List<ItemParamMap>) change.getExtraData();
             
-            rewardList.forEach(reward::addAwardItems);
-            
-            rsp.addRewards(reward);
+            for (var rewards : list) {
+                var reward = RegionBossLevelSweepRewards.newInstance()
+                        .setExp(data.getEnergyConsume());
+                
+                rewards.toItemTemplateStream().forEach(reward::addAwardItems);
+                
+                rsp.addRewards(reward);
+            }
         }
         
         // Send response

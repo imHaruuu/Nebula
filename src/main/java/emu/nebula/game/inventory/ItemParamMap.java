@@ -19,6 +19,16 @@ import us.hebi.quickbuf.RepeatedMessage;
 public class ItemParamMap extends Int2IntLinkedOpenHashMap implements ObjectBidirectionalIterable<Int2IntMap.Entry> {
     private static final long serialVersionUID = -4186524272780523459L;
     
+    public static final ItemParamMap EMPTY = new ItemParamMap() {
+        public int put(int itemId, int count) {
+            return 0;
+        }
+        
+        public int add(int itemId, int count) {
+            return 0;
+        }
+    };
+    
     @Override @Deprecated
     public int addTo(int itemId, int count) {
         return this.add(itemId, count);

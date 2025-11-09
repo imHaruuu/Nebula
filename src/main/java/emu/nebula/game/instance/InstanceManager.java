@@ -1,11 +1,14 @@
 package emu.nebula.game.instance;
 
+import java.util.ArrayList;
+
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
 import emu.nebula.GameConstants;
 import emu.nebula.Nebula;
 import emu.nebula.data.GameData;
 import emu.nebula.database.GameDatabaseObject;
+import emu.nebula.game.inventory.ItemParamMap;
 import emu.nebula.game.player.Player;
 import emu.nebula.game.player.PlayerChangeInfo;
 import emu.nebula.game.player.PlayerManager;
@@ -88,20 +91,17 @@ public class InstanceManager extends PlayerManager implements GameDatabaseObject
         
         // Handle win
         if (settleData.isWin()) {
-            // Reward type
-            int rewardType = this.getRewardType();
-            
             // Calculate energy and exp
             settleData.setExp(data.getEnergyConsume());
             getPlayer().consumeEnergy(settleData.getExp(), change);
             
-            // Awards
-            getPlayer().getInventory().addItem(GameConstants.EXP_ITEM_ID, settleData.getExp(), change);
-            getPlayer().getInventory().addItems(data.getRewards(rewardType), change);
+            // Calculate rewards
+            settleData.generateRewards(data, this.getRewardType());
             
-            if (settleData.isFirst()) {
-                getPlayer().getInventory().addItems(data.getFirstRewards(rewardType), change);
-            }
+            // Add to inventory
+            getPlayer().getInventory().addItem(GameConstants.EXP_ITEM_ID, settleData.getExp(), change);
+            getPlayer().getInventory().addItems(settleData.getRewards(), change);
+            getPlayer().getInventory().addItems(settleData.getFirstRewards(), change);
             
             // Log
             this.saveInstanceLog(log, logName, data.getId(), star);
@@ -146,15 +146,33 @@ public class InstanceManager extends PlayerManager implements GameDatabaseObject
             return null;
         }
         
-        // Init player change info
+        // Init variables
         var change = new PlayerChangeInfo();
+        var list = new ArrayList<ItemParamMap>();
         
         // Consume exp
         getPlayer().consumeEnergy(energyCost, change);
-        
-        // Awards
         getPlayer().getInventory().addItem(GameConstants.EXP_ITEM_ID, energyCost, change);
-        getPlayer().getInventory().addItems(data.getRewards(rewardType).mulitply(count), change);
+        
+        // Calculate total rewards
+        var totalRewards = new ItemParamMap();
+        
+        for (int i = 0; i < count; i++) {
+            // Generate rewards for each settle count
+            var rewards = data.generateRewards(rewardType);
+            
+            // Add to reward list
+            list.add(rewards);
+            
+            // Add to total rewards
+            totalRewards.add(rewards);
+        }
+        
+        // Add total rewards to inventory
+        getPlayer().getInventory().addItems(totalRewards, change);
+        
+        // Set reward list in change info so we can serialize it in the response proto later
+        change.setExtraData(list);
         
         // Quest triggers
         this.getPlayer().getQuestManager().triggerQuest(questCondition, count);

@@ -6,7 +6,11 @@ import emu.nebula.proto.SkillInstanceSweep.SkillInstanceSweepReq;
 import emu.nebula.proto.SkillInstanceSweep.SkillInstanceSweepResp;
 import emu.nebula.proto.SkillInstanceSweep.SkillInstanceSweepRewards;
 import emu.nebula.net.HandlerId;
+
+import java.util.List;
+
 import emu.nebula.data.GameData;
+import emu.nebula.game.inventory.ItemParamMap;
 import emu.nebula.game.quest.QuestCondType;
 import emu.nebula.net.GameSession;
 
@@ -42,17 +46,19 @@ public class HandlerSkillInstanceSweepReq extends NetHandler {
         var rsp = SkillInstanceSweepResp.newInstance()
                 .setChange(change.toProto());
         
-        // Cache reward list
-        var rewardList = data.getRewards().toItemTemplateStream().toList();
-        
-        // Add rewards
-        for (int i = 0; i < req.getTimes(); i++) {
-            var reward = SkillInstanceSweepRewards.newInstance()
-                    .setExp(data.getEnergyConsume());
+        // Add reward list to response
+        if (change.getExtraData() != null) {
+            @SuppressWarnings("unchecked")
+            var list = (List<ItemParamMap>) change.getExtraData();
             
-            rewardList.forEach(reward::addAwardItems);
-            
-            rsp.addRewards(reward);
+            for (var rewards : list) {
+                var reward = SkillInstanceSweepRewards.newInstance()
+                        .setExp(data.getEnergyConsume());
+                
+                rewards.toItemTemplateStream().forEach(reward::addAwardItems);
+                
+                rsp.addRewards(reward);
+            }
         }
         
         // Send response

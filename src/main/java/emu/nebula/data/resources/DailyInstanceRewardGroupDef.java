@@ -1,8 +1,11 @@
 package emu.nebula.data.resources;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import emu.nebula.data.BaseDef;
 import emu.nebula.data.ResourceType;
-import emu.nebula.game.inventory.ItemParamMap;
+import emu.nebula.game.instance.InstanceRewardParam;
 import emu.nebula.util.JsonUtils;
 import lombok.Getter;
 
@@ -13,8 +16,8 @@ public class DailyInstanceRewardGroupDef extends BaseDef {
     private int DailyRewardType;
     private String BaseAwardPreview;
     
-    private transient ItemParamMap firstRewards;
-    private transient ItemParamMap rewards;
+    private transient List<InstanceRewardParam> firstRewards;
+    private transient List<InstanceRewardParam> rewards;
     
     @Override
     public int getId() {
@@ -23,9 +26,9 @@ public class DailyInstanceRewardGroupDef extends BaseDef {
     
     @Override
     public void onLoad() {
-        // Init reward maps
-        this.firstRewards = new ItemParamMap();
-        this.rewards = new ItemParamMap();
+        // Init reward lists
+        this.firstRewards = new ArrayList<>();
+        this.rewards = new ArrayList<>();
         
         // Parse rewards
         var awards = JsonUtils.decodeList(this.BaseAwardPreview, int[].class);
@@ -35,13 +38,21 @@ public class DailyInstanceRewardGroupDef extends BaseDef {
         
         for (int[] award : awards) {
             int itemId = award[0];
-            int count = award[1];
-            boolean isFirst = award[2] == 1;
+            int min = award[1];
+            int max = award.length >= 4 ? award[2] : min;
+            boolean isFirst = award[award.length - 1] == 1;
+            
+            if (min == -1) {
+                min = 0;
+                max = 1;
+            }
+            
+            var reward = new InstanceRewardParam(itemId, min, max);
             
             if (isFirst) {
-                this.firstRewards.put(itemId, count);
+                this.firstRewards.add(reward);
             } else {
-                this.rewards.put(itemId, count);
+                this.rewards.add(reward);
             }
         }
     }

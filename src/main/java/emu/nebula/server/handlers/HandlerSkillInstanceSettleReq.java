@@ -45,12 +45,11 @@ public class HandlerSkillInstanceSettleReq extends NetHandler {
                 .setChange(changes.toProto());
         
         // Add reward items to proto
-        if (settleData.isWin()) {
-            data.getRewards().toItemTemplateStream().forEach(rsp::addAwardItems);
-            
-            if (settleData.isFirst()) {
-                data.getFirstRewards().toItemTemplateStream().forEach(rsp::addAwardItems);
-            }
+        if (settleData.getRewards() != null) {
+            settleData.getRewards().toItemTemplateStream().forEach(rsp::addAwardItems);
+        }
+        if (settleData.getFirstRewards() != null) {
+            settleData.getFirstRewards().toItemTemplateStream().forEach(rsp::addFirstItems);
         }
         
         // Send response

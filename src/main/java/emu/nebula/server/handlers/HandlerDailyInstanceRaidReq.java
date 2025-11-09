@@ -6,7 +6,11 @@ import emu.nebula.proto.DailyInstanceRaid.DailyInstanceRaidReq;
 import emu.nebula.proto.DailyInstanceRaid.DailyInstanceRaidResp;
 import emu.nebula.proto.DailyInstanceRaid.DailyInstanceReward;
 import emu.nebula.net.HandlerId;
+
+import java.util.List;
+
 import emu.nebula.data.GameData;
+import emu.nebula.game.inventory.ItemParamMap;
 import emu.nebula.game.quest.QuestCondType;
 import emu.nebula.net.GameSession;
 
@@ -47,17 +51,19 @@ public class HandlerDailyInstanceRaidReq extends NetHandler {
         var rsp = DailyInstanceRaidResp.newInstance()
                 .setChange(change.toProto());
         
-        // Cache reward list
-        var rewardList = data.getRewards(req.getRewardType()).toItemProtoStream().toList();
-        
-        // Add rewards
-        for (int i = 0; i < req.getTimes(); i++) {
-            var reward = DailyInstanceReward.newInstance()
-                    .setExp(data.getEnergyConsume());
+        // Add reward list to response
+        if (change.getExtraData() != null) {
+            @SuppressWarnings("unchecked")
+            var list = (List<ItemParamMap>) change.getExtraData();
             
-            rewardList.forEach(reward::addSelect);
-            
-            rsp.addRewards(reward);
+            for (var rewards : list) {
+                var reward = DailyInstanceReward.newInstance()
+                        .setExp(data.getEnergyConsume());
+                
+                rewards.toItemProtoStream().forEach(reward::addSelect);
+                
+                rsp.addRewards(reward);
+            }
         }
         
         // Send response
