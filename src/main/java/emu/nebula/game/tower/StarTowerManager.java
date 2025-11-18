@@ -159,7 +159,7 @@ public class StarTowerManager extends PlayerManager {
         return this.getBuilds().containsKey(id);
     }
     
-    public StarTowerGame apply(StarTowerApplyReq req) {
+    public PlayerChangeInfo apply(StarTowerApplyReq req) {
         // Sanity checks
         var data = GameData.getStarTowerDataTable().get(req.getId());
         if (data == null) {
@@ -177,6 +177,32 @@ public class StarTowerManager extends PlayerManager {
             return null;
         }
         
+        // Create change
+        var change = new PlayerChangeInfo();
+        
+        // Check if sweeping
+        if (req.getSweep()) {
+            // Make sure we have the proper growth node that enables sweeping
+            if (!this.hasGrowthNode(10301)) {
+                return null;
+            }
+            
+            // Check if we have this tower completed
+            boolean unlockInstances = Nebula.getConfig().getServerOptions().isUnlockInstances();
+            if (!unlockInstances && !getPlayer().getProgress().getStarTowerLog().contains(data.getId())) {
+                return null;
+            }
+            
+            // Check materials
+            if (this.getPlayer().getInventory().hasItem(29, 1)) {
+                this.getPlayer().getInventory().removeItem(29, 1, change);
+            } else if (this.getPlayer().getInventory().hasItem(30, 1)) {
+                this.getPlayer().getInventory().removeItem(30, 1, change);
+            } else {
+                return null;
+            }
+        }
+        
         // Create game
         this.game = new StarTowerGame(this, data, formation, req);
         
@@ -184,7 +210,7 @@ public class StarTowerManager extends PlayerManager {
         this.getPlayer().triggerQuest(QuestCondType.TowerEnterFloor, 1);
         
         // Success
-        return this.game;
+        return change.setExtraData(this.game);
     }
 
     public StarTowerGame endGame() {

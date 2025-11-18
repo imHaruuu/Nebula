@@ -5,6 +5,7 @@ import emu.nebula.net.NetMsgId;
 import emu.nebula.proto.StarTowerApply.StarTowerApplyReq;
 import emu.nebula.proto.StarTowerApply.StarTowerApplyResp;
 import emu.nebula.net.HandlerId;
+import emu.nebula.game.tower.StarTowerGame;
 import emu.nebula.net.GameSession;
 
 @HandlerId(NetMsgId.star_tower_apply_req)
@@ -16,18 +17,20 @@ public class HandlerStarTowerApplyReq extends NetHandler {
         var req = StarTowerApplyReq.parseFrom(message);
         
         // Apply to create a star tower instance
-        var instance = session.getPlayer().getStarTowerManager().apply(req);
+        var change = session.getPlayer().getStarTowerManager().apply(req);
         
-        if (instance == null) {
+        if (change == null) {
             return session.encodeMsg(NetMsgId.star_tower_apply_failed_ack);
         }
+        
+        // Get star tower game from change info
+        var game = (StarTowerGame) change.getExtraData();
         
         // Create response
         var rsp = StarTowerApplyResp.newInstance()
                 .setLastId(req.getId())
-                .setInfo(instance.toProto());
-        
-        rsp.getMutableChange();
+                .setInfo(game.toProto())
+                .setChange(change.toProto());
         
         return session.encodeMsg(NetMsgId.star_tower_apply_succeed_ack, rsp);
     }
