@@ -135,7 +135,7 @@ public class Player implements GameDatabaseObject {
         this.name = name;
         this.signature = "";
         this.gender = gender;
-        this.headIcon = 101;
+        this.headIcon = gender ? 101 : 102;
         this.skinId = 10301;
         this.titlePrefix = 1;
         this.titleSuffix = 2;

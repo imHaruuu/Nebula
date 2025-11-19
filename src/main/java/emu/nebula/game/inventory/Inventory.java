@@ -68,6 +68,10 @@ public class Inventory extends PlayerManager implements GameDatabaseObject {
         this.shopBuyCount = new ItemParamMap();
         this.mallBuyCount = new String2IntMap();
         
+        // Add player heads
+        this.getHeadIcons().add(101);
+        this.getHeadIcons().add(102);
+        
         // Add titles directly
         this.getTitles().add(player.getTitlePrefix());
         this.getTitles().add(player.getTitleSuffix());
@@ -164,16 +168,16 @@ public class Inventory extends PlayerManager implements GameDatabaseObject {
         
         // Add character skins
         for (var character : getPlayer().getCharacters().getCharacterCollection()) {
-            // Add default skin id
+            // Add default head icon id
             icons.add(character.getData().getDefaultSkinId());
             
-            // Add advance skin
+            // Add advance head icon
             if (character.getAdvance() >= character.getData().getAdvanceSkinUnlockLevel()) {
                 icons.add(character.getData().getAdvanceSkinId());
             }
         }
         
-        // Finally, add extra skins
+        // Finally, add extra head icons
         icons.addAll(this.getHeadIcons());
         
         // Complete and return
