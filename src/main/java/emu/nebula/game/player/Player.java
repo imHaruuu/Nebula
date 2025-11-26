@@ -2,6 +2,7 @@ package emu.nebula.game.player;
 
 import java.util.Stack;
 
+import dev.morphia.annotations.AlsoLoad;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
 import dev.morphia.annotations.Indexed;
@@ -46,7 +47,6 @@ import emu.nebula.proto.Public.WorldClassRewardState;
 import emu.nebula.proto.Public.Title;
 
 import lombok.Getter;
-import lombok.Setter;
 import us.hebi.quickbuf.ProtoMessage;
 import us.hebi.quickbuf.RepeatedInt;
 
@@ -58,6 +58,10 @@ public class Player implements GameDatabaseObject {
     
     private transient Account account;
     private transient GameSession session;
+    
+    @Indexed
+    @AlsoLoad("playerRemoteToken")
+    private String remoteToken;
     
     // Details
     private String name;
@@ -90,7 +94,6 @@ public class Player implements GameDatabaseObject {
     private final transient InfinityTowerManager infinityTowerManager;
     private final transient VampireSurvivorManager vampireSurvivorManager;
     private final transient ScoreBossManager scoreBossManager;
-    @Indexed @Setter @Getter private String playerRemoteToken;
     
     // Referenced data
     private transient Inventory inventory;
@@ -147,7 +150,6 @@ public class Player implements GameDatabaseObject {
         this.honor = new int[3];
         this.showChars = new int[3];
         this.boards = new int[] {410301};
-        this.playerRemoteToken = null;
         
         this.level = 1;
         this.energy = 240;
@@ -198,6 +200,25 @@ public class Player implements GameDatabaseObject {
     
     public boolean hasSession() {
         return this.session != null;
+    }
+    
+    public void setRemoteToken(String token) {
+        // Skip if tokens are the same
+        if (this.remoteToken == null) {
+            if (token == null) {
+                return;
+            }
+        } else if (this.remoteToken != null) {
+            if (this.remoteToken.equals(token)) {
+                return;
+            }
+        }
+        
+        // Set remote token
+        this.remoteToken = token;
+        
+        // Update in database
+        Nebula.getGameDatabase().update(this, this.getUid(), "remoteToken", this.remoteToken);
     }
     
     public boolean getGender() {
@@ -551,12 +572,6 @@ public class Player implements GameDatabaseObject {
         
         // Complete
         return change;
-    }
-    
-    //
-    
-    public void sendMessage(String string) {
-        // Empty
     }
     
     // Dailies

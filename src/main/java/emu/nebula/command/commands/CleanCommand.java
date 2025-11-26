@@ -25,7 +25,7 @@ import java.util.HashSet;
 public class CleanCommand implements CommandHandler {
 
     @Override
-    public void execute(CommandArgs args) {
+    public String execute(CommandArgs args) {
         var player = args.getTarget();
         var inv = player.getInventory();
 
@@ -77,42 +77,39 @@ public class CleanCommand implements CommandHandler {
         } else {
             for (int id : ids) {
                 ItemDef data = GameData.getItemDataTable().get(id);
+                if (data == null) continue;
+                
+                ItemType type = data.getItemType();
 
-                if (data != null) {
-                    ItemType type = data.getItemType();
-
-                    switch (type) {
-                        case Res -> {
-                            if (doResources) {
-                                int count = inv.getResourceCount(id);
-                                if (count > 0) removeMap.add(id, count);
-                            }
-                        }
-                        case Item -> {
-                            if (doItems) {
-                                int count = inv.getItemCount(id);
-                                if (count > 0) removeMap.add(id, count);
-                            }
-                        }
-                        case Disc, Char, CharacterSkin, Title, Honor -> {
-                            
-                        }
-                        default -> {
-                            if (doItems) {
-                                int count = inv.getItemCount(id);
-                                if (count > 0) {
-                                    removeMap.add(id, count);
-                                    break;
-                                }
-                            }
-                            if (doResources) {
-                                int count = inv.getResourceCount(id);
-                                if (count > 0) removeMap.add(id, count);
-                            }
+                switch (type) {
+                    case Res -> {
+                        if (doResources) {
+                            int count = inv.getResourceCount(id);
+                            if (count > 0) removeMap.add(id, count);
                         }
                     }
-                } else {
-                    args.sendMessage("Error: Invalid item id " + id);
+                    case Item -> {
+                        if (doItems) {
+                            int count = inv.getItemCount(id);
+                            if (count > 0) removeMap.add(id, count);
+                        }
+                    }
+                    case Disc, Char, CharacterSkin, Title, Honor -> {
+                        
+                    }
+                    default -> {
+                        if (doItems) {
+                            int count = inv.getItemCount(id);
+                            if (count > 0) {
+                                removeMap.add(id, count);
+                                break;
+                            }
+                        }
+                        if (doResources) {
+                            int count = inv.getResourceCount(id);
+                            if (count > 0) removeMap.add(id, count);
+                        }
+                    }
                 }
             }
         }
@@ -122,11 +119,11 @@ public class CleanCommand implements CommandHandler {
         }
 
         if (change.isEmpty()) {
-            args.sendMessage("No items/resources removed");
-            return;
+            return "No items/resources removed";
         }
 
         player.addNextPackage(NetMsgId.items_change_notify, change.toProto());
-        args.sendMessage("Inventory cleaned");
+        
+        return "Inventory cleaned";
     }
 }

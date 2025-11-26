@@ -113,18 +113,6 @@ public class CommandArgs {
         return this.list.get(index);
     }
     
-    /**
-     * Sends a message to the command sender
-     * @param message
-     */
-    public void sendMessage(String message) {
-        if (sender != null) {
-            sender.sendMessage(message);
-        } else {
-            Nebula.getLogger().info(message);
-        }
-    }
-    
     public boolean hasFlag(String flag) {
         if (this.flags == null) return false;
         return this.flags.contains(flag);
