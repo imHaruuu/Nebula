@@ -23,10 +23,11 @@ public class HandlerPlayerSignatureEdit extends NetHandler {
         
         // Check if we need to handle a command
         if (signature.charAt(0) == '!' || signature.charAt(0) == '/') {
-            Nebula.getCommandManager().invoke(session.getPlayer(), signature);
+            var result = Nebula.getCommandManager().invoke(session.getPlayer(), signature);
+            
             return session.encodeMsg(
                     NetMsgId.player_signature_edit_failed_ack,
-                    Error.newInstance().setCode(119902).addArguments("\nCommand Success")
+                    Error.newInstance().setCode(119902).addArguments("\nCommand Result: " + result.getMessage())
             );
         }
         
